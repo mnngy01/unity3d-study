@@ -2,11 +2,18 @@ using UnityEngine;
 
 public class PlayerPickup : MonoBehaviour
 {
-    public Transform holdPoint;
-    public float pickupRange = 2f;
+    public Transform holdPoint;     // 물건 드는 위치
+    public float pickupRange = 2f;  // 물건 집는 범위
+    private LighterController lighterController; // 라이터 스크립트 호출
 
     private GameObject nearbyObject;
     private GameObject heldObject;
+
+
+    void Start()
+    {
+        lighterController = GetComponent<LighterController>();
+    }
 
     void Update()
     {
@@ -46,8 +53,12 @@ public class PlayerPickup : MonoBehaviour
         }
     }
 
+    // 물건 줍기
     void PickupObject(GameObject obj)
     {
+        lighterController.TurnOffLighter(); // 라이터 끄기
+        Debug.Log("here");
+
         heldObject = obj;
 
         Rigidbody rb = obj.GetComponent<Rigidbody>();
