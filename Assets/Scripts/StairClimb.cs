@@ -15,6 +15,8 @@ public class StairClimb : MonoBehaviour
     public float maxSlopeAngle = 45f;   // 지면으로 인정하는 최대 경사각
     public float groundCheckDistance = 0.15f;    // 지면 감지 레이 길이
     public LayerMask groundLayer = ~0;  // 지면으로 인정할 레이어
+    public float climbSpeed = 3f;   // 밧줄 이동 속도
+    private bool isOnRope = false;  // 밧줄 위에 있는지
 
     private Rigidbody rb;
     private CapsuleCollider col;
@@ -50,13 +52,28 @@ public class StairClimb : MonoBehaviour
     {
         GatherInput();
 
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Jump();
+        if (Input.GetKeyDown(KeyCode.Space)) 
+        {
+            isOnRope = false;
+            rb.useGravity = true;
+
+            // 로프에서 점프
+            rb.AddForce((transform.forward + Vector3.up) * jumpForce, ForceMode.Impulse);
+        }
+        else {
+            if (Input.GetKeyDown(KeyCode.Space) && isGrounded) {
+                Jump();
+            }
         }
     }
 
     void FixedUpdate()
     {
+        if (isOnRope)
+        {
+            HandleRope();
+            return;
+        }
         CheckGround();
         HandleStepClimb();
         ApplyMovement();
@@ -199,6 +216,49 @@ public class StairClimb : MonoBehaviour
         // 지면 감지 구 (파란색)
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position + Vector3.up * (col.radius * 0.9f - groundCheckDistance), col.radius * 0.8f);
+    }
+
+    // 트리거 진입
+    private void OnTriggerEnter(Collider other)
+    {
+        // 밧줄
+        if (other.CompareTag("Rope"))
+        {
+            isOnRope = true;
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+        }
+    }
+
+    // 트리거 이탈
+    private void OnTriggerExit(Collider other)
+    {
+        // 밧줄
+        if (other.CompareTag("Rope"))
+        {
+            isOnRope = false;
+            rb.useGravity = true;
+        }
+    }
+
+    // 로프 이동 함수
+    void HandleRope()
+    {
+        float vertical = 0f;
+
+        if (Input.GetKey(KeyCode.W)) {
+            Debug.Log("here");
+            vertical = 1f;
+        }
+
+        if (Input.GetKey(KeyCode.S)) {
+            vertical = -1f;
+        }
+
+        rb.MovePosition(
+            transform.position +
+            Vector3.up * vertical * climbSpeed * Time.fixedDeltaTime
+        );
     }
 }
 
