@@ -247,7 +247,6 @@ public class StairClimb : MonoBehaviour
         float vertical = 0f;
 
         if (Input.GetKey(KeyCode.W)) {
-            Debug.Log("here");
             vertical = 1f;
         }
 
