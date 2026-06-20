@@ -7,6 +7,7 @@ TagManager:
   - Pickable
   - HandleTrigger
   - Rope
+  - Key
   layers:
   - Default
   - TransparentFX

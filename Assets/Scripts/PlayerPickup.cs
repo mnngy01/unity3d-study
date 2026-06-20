@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using UnityEngine;
 
 public class PlayerPickup : MonoBehaviour
@@ -8,6 +9,7 @@ public class PlayerPickup : MonoBehaviour
 
     private GameObject nearbyObject;
     private GameObject heldObject;
+    private bool hasKey = false;    // key 주웠는지
 
 
     void Start()
@@ -36,7 +38,7 @@ public class PlayerPickup : MonoBehaviour
     // 근처 물체 감지
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Pickable"))
+        if (other.CompareTag("Pickable") || other.CompareTag("Key"))
         {
             nearbyObject = other.gameObject;
         }
@@ -44,7 +46,7 @@ public class PlayerPickup : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Pickable"))
+        if (other.CompareTag("Pickable") || other.CompareTag("Key"))
         {
             if (nearbyObject == other.gameObject)
             {
@@ -57,22 +59,36 @@ public class PlayerPickup : MonoBehaviour
     void PickupObject(GameObject obj)
     {
         lighterController.TurnOffLighter(); // 라이터 끄기
-        Debug.Log("here");
+
+        // Key인 경우 변수 변경
+        if (obj.CompareTag("Key"))
+        {
+            hasKey = true;
+        }    
 
         heldObject = obj;
 
         Rigidbody rb = obj.GetComponent<Rigidbody>();
 
+        // 중력 끄고 키네마틱 키기
         rb.useGravity = false;
         rb.isKinematic = true;
 
+        // 부모오브젝트 설정, 포지션과 회전여부 고정
         obj.transform.SetParent(holdPoint);
         obj.transform.localPosition = Vector3.zero;
         obj.transform.localRotation = Quaternion.identity;
     }
 
+    // 물건 내려놓기
     void DropObject()
     {
+        // Key인 경우 변수 변경
+        if (heldObject.CompareTag("Key"))
+        {
+            hasKey = false;
+        }
+
         Rigidbody rb = heldObject.GetComponent<Rigidbody>();
 
         rb.isKinematic = false;
@@ -81,5 +97,11 @@ public class PlayerPickup : MonoBehaviour
         heldObject.transform.SetParent(null);
 
         heldObject = null;
+    }
+
+    // hasKey 상태 출력
+    public bool HasKey()
+    {
+        return hasKey;
     }
 }

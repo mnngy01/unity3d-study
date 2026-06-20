@@ -24,7 +24,7 @@ public class PasswordManager : MonoBehaviour
         if (inputField.text == correctPassword)
         {
             Debug.Log("correct");
-            // door.ToggleDoor();  // 문 열기
+            door.ToggleDoor();  // 문 열기
             ClosePanel();
         }
         else
