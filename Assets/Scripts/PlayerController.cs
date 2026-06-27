@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
 
-public class StairClimb : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     public float moveSpeed = 4f;    // 이동 속도
     public float jumpForce = 20f;    // 점프 변수
@@ -59,10 +59,16 @@ public class StairClimb : MonoBehaviour
 
             // 로프에서 점프
             rb.AddForce((transform.forward + Vector3.up) * jumpForce, ForceMode.Impulse);
+            
+            SoundManager.Instance.MakeSound(transform.position);
         }
         else {
-            if (Input.GetKeyDown(KeyCode.Space) && isGrounded) {
+            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            {
+                Debug.Log("here");
                 Jump();
+                Debug.Log("next jump");
+                SoundManager.Instance.MakeSound(transform.position);
             }
         }
     }
@@ -105,6 +111,7 @@ public class StairClimb : MonoBehaviour
     {
         // 캡슐 하단 중심에서 아래로 짧은 레이
         Vector3 origin = transform.position + Vector3.up * (col.radius * 0.9f);
+        Debug.DrawRay(origin, Vector3.down * 2f, Color.red);
         isGrounded = Physics.SphereCast(
             origin,
             col.radius * 0.8f,
@@ -258,6 +265,11 @@ public class StairClimb : MonoBehaviour
             transform.position +
             Vector3.up * vertical * climbSpeed * Time.fixedDeltaTime
         );
+    }
+
+    public bool IsMoving()
+    {
+        return moveInput.sqrMagnitude > 0.01f;
     }
 }
 
