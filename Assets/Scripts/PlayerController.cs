@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -13,7 +14,7 @@ public class PlayerController : MonoBehaviour
     public float stepUpForce = 8f;  // 계단 오를 때 위쪽으로 작용하는 힘
     public float stepSmoothing = 15f;    // 계단 오르기 스무싱 속도
     public float maxSlopeAngle = 45f;   // 지면으로 인정하는 최대 경사각
-    public float groundCheckDistance = 0.15f;    // 지면 감지 레이 길이
+    public float groundCheckDistance = 1.0f;    // 지면 감지 레이 길이
     public LayerMask groundLayer = ~0;  // 지면으로 인정할 레이어
     public float climbSpeed = 3f;   // 밧줄 이동 속도
     private bool isOnRope = false;  // 밧줄 위에 있는지
@@ -22,6 +23,7 @@ public class PlayerController : MonoBehaviour
     private CapsuleCollider col;
 
     private bool isGrounded;
+    private bool wasGrounded;
     private bool isClimbingStep;
     private float targetStepY;  // 계단 오를 때 목표 y 위치
     private Vector3 moveInput;
@@ -30,6 +32,22 @@ public class PlayerController : MonoBehaviour
     private float lowerRayOffset;   // 바닥에서 살짝 위
     private float upperRayOffset;   // maxStepHeight 높이
 
+    // 점프 효과음
+    public AudioSource audioSource;
+    public AudioClip jumpLandSE;
+
+    // 걷는 효과음
+    public AudioClip footstepSE;
+    public float footstepInterval = 0.8f;
+    private float footstepTimer;
+    private bool isSilentArea;
+
+
+    void Start()
+    {
+        wasGrounded = true;
+        isSilentArea = false;
+    }
 
     void Awake()
     {
@@ -43,16 +61,12 @@ public class PlayerController : MonoBehaviour
         upperRayOffset = maxStepHeight + 0.05f;
     }
 
-    void Start()
-    {
-        
-    }
-
     void Update()
     {
+
         GatherInput();
 
-        if (Input.GetKeyDown(KeyCode.Space)) 
+        if (Input.GetKeyDown(KeyCode.Space) && !isGrounded) 
         {
             isOnRope = false;
             rb.useGravity = true;
@@ -65,11 +79,27 @@ public class PlayerController : MonoBehaviour
         else {
             if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
             {
-                Debug.Log("here");
                 Jump();
-                Debug.Log("next jump");
-                SoundManager.Instance.MakeSound(transform.position);
             }
+        }
+
+        // 걷는 효과음
+        if (IsMoving() && isGrounded && !isSilentArea)
+        {
+            footstepTimer += Time.deltaTime;
+
+            if (footstepTimer >= footstepInterval)
+            {
+                // 발소리 재생
+                audioSource.PlayOneShot(footstepSE);
+                footstepTimer = 0f;
+
+                // SoundManager.Instance.MakeSound(transform.position);
+            }
+        }
+        else
+        {
+            footstepTimer = footstepInterval;
         }
     }
 
@@ -80,10 +110,19 @@ public class PlayerController : MonoBehaviour
             HandleRope();
             return;
         }
+
         CheckGround();
         HandleStepClimb();
         ApplyMovement();
         ApplyRotation();
+
+        // 공중 -> 착지 순간
+        if (!wasGrounded && isGrounded)
+        {
+            audioSource.PlayOneShot(jumpLandSE);    // 사운드 재생
+            SoundManager.Instance.MakeSound(transform.position);    // 보스로 전달
+        }
+        wasGrounded = isGrounded;
     }
 
     // 입력 수집
@@ -109,17 +148,16 @@ public class PlayerController : MonoBehaviour
     // 지면 감지
     void CheckGround()
     {
-        // 캡슐 하단 중심에서 아래로 짧은 레이
-        Vector3 origin = transform.position + Vector3.up * (col.radius * 0.9f);
-        Debug.DrawRay(origin, Vector3.down * 2f, Color.red);
-        isGrounded = Physics.SphereCast(
-            origin,
-            col.radius * 0.8f,
-            Vector3.down,
-            out RaycastHit hit,
-            groundCheckDistance + col.radius * 0.1f,
-            groundLayer
-        ) && Vector3.Angle(hit.normal, Vector3.up) <= maxSlopeAngle;
+        // 캡슐의 가장 아래쪽에서 살짝 아래 위치
+        Vector3 checkPos = col.bounds.min + Vector3.down * 0.05f;
+
+        // 반지름 0.1의 구가 바닥과 겹치는지 검사
+        isGrounded = Physics.CheckSphere(
+            checkPos,
+            0.1f,
+            groundLayer,
+            QueryTriggerInteraction.Ignore
+        );
     }
 
     // 계단 감지 & 오르기
@@ -235,6 +273,13 @@ public class PlayerController : MonoBehaviour
             rb.useGravity = false;
             rb.linearVelocity = Vector3.zero;
         }
+
+        // Silent Area
+        if (other.CompareTag("SilentArea"))
+        {
+            isSilentArea = true;
+        }
+        
     }
 
     // 트리거 이탈
@@ -245,6 +290,12 @@ public class PlayerController : MonoBehaviour
         {
             isOnRope = false;
             rb.useGravity = true;
+        }
+
+        // Silent Area
+        if (other.CompareTag("SilentArea"))
+        {
+            isSilentArea = false;
         }
     }
 
@@ -271,6 +322,8 @@ public class PlayerController : MonoBehaviour
     {
         return moveInput.sqrMagnitude > 0.01f;
     }
+
+    
 }
 
 

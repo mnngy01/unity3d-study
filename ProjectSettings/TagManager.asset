@@ -8,6 +8,7 @@ TagManager:
   - HandleTrigger
   - Rope
   - Key
+  - SilentArea
   layers:
   - Default
   - TransparentFX

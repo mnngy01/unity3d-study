@@ -14,8 +14,9 @@ public class SurfaceSound : MonoBehaviour
             if (!audioSource.isPlaying)
             {
                 audioSource.Play();
-                SoundManager.Instance.MakeSound(other.transform.position);
             }
+            
+            SoundManager.Instance.MakeSound(other.transform.position);
         }
     }
 
