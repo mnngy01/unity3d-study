@@ -9,6 +9,7 @@ TagManager:
   - Rope
   - Key
   - SilentArea
+  - Pushable
   layers:
   - Default
   - TransparentFX

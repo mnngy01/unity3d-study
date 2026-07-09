@@ -16,8 +16,12 @@ public class PlayerController : MonoBehaviour
     public float maxSlopeAngle = 45f;   // 지면으로 인정하는 최대 경사각
     public float groundCheckDistance = 1.0f;    // 지면 감지 레이 길이
     public LayerMask groundLayer = ~0;  // 지면으로 인정할 레이어
+    public bool isPushing = false;      // 물체를 밀고 있는지
+
     public float climbSpeed = 3f;   // 밧줄 이동 속도
+
     private bool isOnRope = false;  // 밧줄 위에 있는지
+    
 
     private Rigidbody rb;
     private CapsuleCollider col;
@@ -77,7 +81,7 @@ public class PlayerController : MonoBehaviour
             SoundManager.Instance.MakeSound(transform.position);
         }
         else {
-            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isPushing)
             {
                 Jump();
             }
@@ -129,7 +133,7 @@ public class PlayerController : MonoBehaviour
     void GatherInput()
     {
         float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        float v = isPushing ? 0f : Input.GetAxisRaw("Vertical");    // 물체를 미는 중엔 z축 이동 불가
         
         Vector3 camForward = Camera.main.transform.forward; camForward.y = 0;
         Vector3 camRight   = Camera.main.transform.right;   camRight.y   = 0;
