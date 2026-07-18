@@ -54,8 +54,6 @@ public class PlayerInteractionController : MonoBehaviour
     // 상자 잡기
     void TryGrab()
     {
-        playerController.isPushing = true;
-
         Vector3 origin = transform.position + Vector3.up * 1f;
 
         Debug.DrawRay(origin, transform.forward * interactRange, Color.red, 2f);
@@ -65,7 +63,9 @@ public class PlayerInteractionController : MonoBehaviour
             if (hit.collider.CompareTag("Pushable"))
             {
                 targetBox = hit.collider.GetComponent<Rigidbody>();
+
                 isPushing = true;
+                playerController.isPushing = true;
 
                 // 플레이어가 상자의 어느 쪽에 있는지
                 grabSide = (transform.position.x < targetBox.position.x) ? -1 : 1;

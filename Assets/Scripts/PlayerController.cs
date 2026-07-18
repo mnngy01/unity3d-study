@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour
     public float climbSpeed = 3f;   // 밧줄 이동 속도
 
     private bool isOnRope = false;  // 밧줄 위에 있는지
+
+    private bool canMove = true;    // 움직임 제한
+    private bool canJump = true;    // 점프 제한
     
 
     private Rigidbody rb;
@@ -132,11 +135,20 @@ public class PlayerController : MonoBehaviour
     // 입력 수집
     void GatherInput()
     {
+        if (!canMove)
+        {
+            moveInput = Vector3.zero;
+            return;
+        }
+
         float h = Input.GetAxisRaw("Horizontal");
         float v = isPushing ? 0f : Input.GetAxisRaw("Vertical");    // 물체를 미는 중엔 z축 이동 불가
         
-        Vector3 camForward = Camera.main.transform.forward; camForward.y = 0;
-        Vector3 camRight   = Camera.main.transform.right;   camRight.y   = 0;
+        Vector3 camForward = Camera.main.transform.forward;
+        camForward.y = 0;
+
+        Vector3 camRight   = Camera.main.transform.right;
+        camRight.y   = 0;
         
         moveInput = (camForward * v + camRight * h).normalized;
     }
@@ -144,6 +156,9 @@ public class PlayerController : MonoBehaviour
     // 점프
     void Jump()
     {
+        if (!canMove)
+            return;
+        
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -327,6 +342,23 @@ public class PlayerController : MonoBehaviour
         return moveInput.sqrMagnitude > 0.01f;
     }
 
+    // 이동만 제한
+    public void SetMovementEnabled(bool enable)
+    {
+        canMove = enable;
+
+        if (!enable)
+        {
+            moveInput = Vector3.zero;
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+        }
+    }
+
+    // 점프만 제어
+    public void SetJumpEnabled(bool enable)
+    {
+        canJump = enable;
+    }
     
 }
 
